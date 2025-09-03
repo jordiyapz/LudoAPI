@@ -35,9 +35,16 @@ public static class BoardEndpoints
 
     boardApi.MapPost("/{id}/roll", async (IBoardService service, Guid id, [FromHeader(Name = "X-Player-Key")] Guid playerKey) =>
     {
-      var board = await service.RollDice(id, playerKey);
-      if (board is null) return (IResult)TypedResults.NotFound("Board not found.");
-      return TypedResults.Ok(board);
+      try
+      {
+        var board = await service.RollDice(id, playerKey);
+        if (board is null) return (IResult)TypedResults.NotFound("Board not found.");
+        return TypedResults.Ok(board);
+      }
+      catch (Exception e)
+      {
+        return (IResult)TypedResults.BadRequest(e.Message);
+      }
     });
 
   }

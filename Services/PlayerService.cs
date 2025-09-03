@@ -1,14 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 
-public class PlayerService : IPlayerService
+namespace LudoAPI.Services;
+
+public class PlayerService(LudoDbContext dbContext) : IPlayerService
 {
-  private readonly LudoDbContext _db;
-  public PlayerService(LudoDbContext dbContext) { _db = dbContext; }
+  private readonly LudoDbContext _db = dbContext;
 
   public async Task<CreatePlayerDTO> CreatePlayerAsync(CreatePlayerBody payload)
   {
     var board = await _db.Boards
-      .AsNoTracking()
       .FirstOrDefaultAsync(b => b.Id == payload.BoardId);
 
     if (board == null)
@@ -46,7 +46,8 @@ public class PlayerService : IPlayerService
     var newPlayer = Player.Create(payload.BoardId, Player.SymbolFromChar(symbol), order);
     var result = await _db.Players.AddAsync(newPlayer);
 
-    if (board.NumOfPlayers == players.Count + 1) board.State = BoardState.Roll;
+    if (board.NumOfPlayers == players.Count + 1)
+      board.State = BoardState.Roll;
 
     await _db.SaveChangesAsync();
 

@@ -1,12 +1,12 @@
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddDbContext<LudoDbContext>(opt => opt.UseInMemoryDatabase("BoardList"));
+var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<LudoDbContext>(opt => opt.UseSqlite("Data Source=LudoSQLite.db"));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-builder.Services.AddTransient<IBoardService, BoardService>();
-builder.Services.AddTransient<IPlayerService, PlayerService>();
+builder.Services.AddTransient<IBoardService, LudoAPI.Services.BoardService>();
+builder.Services.AddTransient<IPlayerService, LudoAPI.Services.PlayerService>();
 builder.Services.AddEndpointsApiExplorer();
 
 // Add services to the container.
@@ -23,6 +23,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.MapBoardEndpoints(); 
+app.MapBoardEndpoints();
 app.MapPlayerEndpoints();
 app.Run();
