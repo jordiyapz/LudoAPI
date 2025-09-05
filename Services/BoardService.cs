@@ -1,4 +1,6 @@
+using LudoAPI.DTOs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Any;
 using System.Collections.Immutable;
 
 namespace LudoAPI.Services;
@@ -89,4 +91,12 @@ public class BoardService(LudoDbContext dbContext) : IBoardService
         return new BoardDTO(
           board.Id, board.NumOfPlayers, board.GetStateString(), board.Turn, board.LastDieValue, board.Created);
     }
+
+    //public async Task<PegDTO> SpawnPeg(Guid boardId, Guid playerKey)
+    //{
+    //    var player = _db.Players.AsNoTracking().FirstOrDefault(p => p.Key == playerKey) ?? throw new Exception("Player not found.");
+    //    var peg = _db.Pegs.Add(Peg.Create(player.Id)).Entity;
+    //    await _db.SaveChangesAsync();
+    //    return new PegDTO(peg.Id, peg.Owner, peg.Position, peg.Order);
+    //}
 }

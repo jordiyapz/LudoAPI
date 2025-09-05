@@ -21,7 +21,7 @@ public class Player
 
     public char CharSymbol => (char)Symbol;
 
-    public static Player Create(Guid boardId, PegSymbol symbol, int order)
+    public static Player Create(Guid boardId, PegSymbol symbol, int order=1)
     {
         return new Player(boardId, symbol, order);
     }

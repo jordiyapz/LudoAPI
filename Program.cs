@@ -1,5 +1,7 @@
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
+using LudoAPI.Services;
+using LudoAPI.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 var conn = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -7,6 +9,7 @@ builder.Services.AddDbContext<LudoDbContext>(opt => opt.UseSqlite("Data Source=L
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddTransient<IBoardService, LudoAPI.Services.BoardService>();
 builder.Services.AddTransient<IPlayerService, LudoAPI.Services.PlayerService>();
+builder.Services.AddTransient<IPegService, LudoAPI.Services.PegService>();
 builder.Services.AddEndpointsApiExplorer();
 
 // Add services to the container.
@@ -25,4 +28,5 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.MapBoardEndpoints();
 app.MapPlayerEndpoints();
+app.MapPegEndpoints();
 app.Run();
