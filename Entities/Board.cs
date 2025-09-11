@@ -35,6 +35,11 @@ public class Board : EntityBase
         Turn = (Turn % NumOfPlayers) + 1;
         return Turn;
     }
+    public void EndTurn()
+    {
+        TurnNext();
+        State = BoardState.Roll;
+    }
 
     public static Board Create(int numOfPlayers)
     {

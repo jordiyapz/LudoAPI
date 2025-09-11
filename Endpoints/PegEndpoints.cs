@@ -20,6 +20,8 @@ public static class PegEndpoints
                 return (IResult)TypedResults.BadRequest(ex.Message);
             }
         });
+
+        pegApi.MapPut("/{id}/position", () => { throw new NotImplementedException(); });
     }
 }
 

@@ -70,6 +70,8 @@ public class BoardService(LudoDbContext dbContext) : IBoardService
 +-----------------+--+--+--+-----------------+";
     }
 
+
+
     public async Task<BoardDTO?> RollDice(Guid boardId, Guid playerKey, int? seed = null)
     {
         var board = await _db.Boards.FirstOrDefaultAsync(b => b.Id == boardId);
@@ -91,12 +93,4 @@ public class BoardService(LudoDbContext dbContext) : IBoardService
         return new BoardDTO(
           board.Id, board.NumOfPlayers, board.GetStateString(), board.Turn, board.LastDieValue, board.Created);
     }
-
-    //public async Task<PegDTO> SpawnPeg(Guid boardId, Guid playerKey)
-    //{
-    //    var player = _db.Players.AsNoTracking().FirstOrDefault(p => p.Key == playerKey) ?? throw new Exception("Player not found.");
-    //    var peg = _db.Pegs.Add(Peg.Create(player.Id)).Entity;
-    //    await _db.SaveChangesAsync();
-    //    return new PegDTO(peg.Id, peg.Owner, peg.Position, peg.Order);
-    //}
 }
