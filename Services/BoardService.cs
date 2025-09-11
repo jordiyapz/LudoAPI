@@ -1,4 +1,5 @@
 using LudoAPI.DTOs;
+using LudoAPI.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Any;
 using System.Collections.Immutable;
@@ -36,41 +37,11 @@ public class BoardService(LudoDbContext dbContext) : IBoardService
     {
         var board = await _db.Boards.FindAsync(id);
         if (board == null) return null;
-        return
-    @"+-----------------+--+--+--+-----------------+
-|                 |  |  |  |                 |
-|  +-----+-----+  +--+--+--+  +-----+-----+  |
-|  |     |     |  |  |     |  |     |     |  |
-|  |     |     |  +--+  +--+  |     |     |  |
-|  |     |     |  |  |  |  |  |     |     |  |
-|  +-----+-----+  +--+  +--+  +-----+-----+  |
-|  |     |     |  |  |  |  |  |     |     |  |
-|  |     |     |  +--+  +--+  |     |     |  |
-|  |     |     |  |  |  |  |  |     |     |  |
-|  +-----+-----+  +--+  +--+  +-----+-----+  |
-|                 |  |  |  |                 |
-+--+--+--+--+--+--+--+  +--+--+--+--+--+--+--+
-|  |  |  |  |  |  |        |  |  |  |  |  |  |
-+--+  +--+--+--+--+        +--+--+--+--+--+--+
-|  |                                      |  |
-+--+--+--+--+--+--+        +--+--+--+--+  +--+
-|  |  |  |  |  |  |        |  |  |  |  |  |  |
-+--+--+--+--+--+--+--+  +--+--+--+--+--+--+--+
-|                 |  |  |  |                 |
-|  +-----+-----+  +--+  +--+  +-----+-----+  |
-|  |     |     |  |  |  |  |  |     |     |  |
-|  |     |     |  +--+  +--+  |     |     |  |
-|  |     |     |  |  |  |  |  |     |     |  |
-|  +-----+-----+  +--+  +--+  +-----+-----+  |
-|  |     |     |  |  |  |  |  |     |     |  |
-|  |     |     |  +--+  +--+  |     |     |  |
-|  |     |     |  |     |  |  |     |     |  |
-|  +-----+-----+  +--+--+--+  +-----+-----+  |
-|                 |  |  |  |                 |
-+-----------------+--+--+--+-----------------+";
+        var players = await _db.Players.Where(p => p.BoardId == board.Id).ToArrayAsync() ?? [];
+        var tasks = players.Select(i => _db.Pegs.Where(p => p.Owner == i.Id).ToArrayAsync());
+        var pegs = (await Task.WhenAll(tasks)).SelectMany(x => x).ToArray() ?? [];
+        return new BoardView(board, players, pegs).render();
     }
-
-
 
     public async Task<BoardDTO?> RollDice(Guid boardId, Guid playerKey, int? seed = null)
     {

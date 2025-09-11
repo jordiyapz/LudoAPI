@@ -5,5 +5,6 @@ namespace LudoAPI.Services;
 public interface IPegService
 {
     public Task<PegDTO> CreatePegAsync(Guid playerKey);
+    public Task<PegDTO?> MovePegAsync(int pegId);
 }
 
