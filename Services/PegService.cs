@@ -38,7 +38,8 @@ namespace LudoAPI.Services
 
             peg.Position += (int)board.LastDieValue;
             board.State = BoardState.Roll;
-            board.TurnNext();
+            if (board.LastDieValue != 6)
+                board.TurnNext();
             await _db.SaveChangesAsync();
             return new PegDTO(peg.Id, peg.Owner, peg.Position, peg.Order);
         }

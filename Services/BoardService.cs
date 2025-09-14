@@ -57,8 +57,18 @@ public class BoardService(LudoDbContext dbContext) : IBoardService
         var newDiceNumber = (seed != null ? new Random((int)seed) : new Random()).Next(1, 7);
 
         board.LastDieValue = newDiceNumber;
-        if (pegs.Count == 0 && newDiceNumber != 6) board.TurnNext();
+
+        if (board.LastDieValue == 6) board.LastConsecutiveSixes++;
+        else board.LastConsecutiveSixes = 0;
+
+        if (board.LastConsecutiveSixes == 3)
+        {
+            board.LastConsecutiveSixes = 0;
+            board.TurnNext();
+        }
+        else if (pegs.Count == 0 && newDiceNumber != 6) board.TurnNext();
         else board.State = BoardState.Move;
+
         await _db.SaveChangesAsync();
 
         return new BoardDTO(

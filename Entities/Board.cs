@@ -11,6 +11,7 @@ public class Board : EntityBase
     public int Turn { get; set; }
     public BoardState? State { get; set; }
     public int? LastDieValue { get; set; }
+    public int? LastConsecutiveSixes { get; set; } = 0;
 
     private Board()
     {
