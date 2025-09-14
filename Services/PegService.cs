@@ -17,7 +17,7 @@ namespace LudoAPI.Services
             var pegs = _db.Pegs.Where(p => p.Owner == player.Id).ToList();
             if (pegs.Count >= 4) throw new Exception("Pegs is full");
 
-            var newPeg = _db.Pegs.Add(Peg.Create(player.Id)).Entity;
+            var newPeg = _db.Pegs.Add(Peg.Create(player.Id, pegs.Count)).Entity;
             board.State = BoardState.Roll;
             await _db.SaveChangesAsync();
 
@@ -25,14 +25,15 @@ namespace LudoAPI.Services
 
         }
 
-        public async Task<PegDTO?> MovePegAsync(int pegId)
+        public async Task<PegDTO?> MovePegAsync(int pegOrder, Guid playerKey)
         {
-            var peg = _db.Pegs.FirstOrDefault(p => p.Id == pegId);
+            var player = _db.Players.FirstOrDefault(p => p.Key == playerKey) ?? throw new Exception("Invalid player key");
+            var peg = _db.Pegs.FirstOrDefault(p => p.Order == pegOrder && p.Owner == player.Id);
             if (peg == null) return null;
 
-            var player = _db.Players.Find(peg.Owner) ?? throw new Exception("Peg's owner not found");
             var board = _db.Boards.Find(player.BoardId) ?? throw new Exception("Board not found");
             if (board.State != BoardState.Move) throw new Exception("Board state is not 'Move'");
+            if (board.Turn != player.Order) throw new Exception("Not your turn");
             if (board.LastDieValue == null) throw new Exception("Dice has not been rolled");
 
             peg.Position += (int)board.LastDieValue;
