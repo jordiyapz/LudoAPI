@@ -1,4 +1,7 @@
-﻿namespace LudoAPI.Entities
+﻿using System.Drawing;
+using System.Xml.Linq;
+
+namespace LudoAPI.Entities
 {
     public class BoardView(Board board, Player[] players, Peg[] pegs)
     {
@@ -8,7 +11,7 @@
 
         private static readonly int IndexPegStationA = 48 * 4 + 6;
         private static readonly int IndexPegStationB = IndexPegStationA + 27;
-        private static readonly int IndexPegStationC = IndexPegStationA + 48*18;
+        private static readonly int IndexPegStationC = IndexPegStationA + 48 * 18;
         private static readonly int IndexPegStationD = IndexPegStationC + 27;
 
         public string render()
@@ -53,10 +56,67 @@
             }
             return new string(boardBase);
         }
+
+        public static XYCoord CalcCoord(int quadrant, int pos)
+        {
+            if (pos < 5)
+                return new XYCoord(1 + pos, 6);
+            if (pos < 11)
+                return new XYCoord(6, 10 - pos);
+            if (pos < 12)
+                return new XYCoord(pos - 4, 0);
+            if (pos < 18)
+                return new XYCoord(8, pos - 12);
+            if (pos < 24)
+                return new XYCoord(pos - 9, 6);
+            if (pos < 26)
+                return new XYCoord(14, pos - 17);
+            if (pos < 31)
+                return new XYCoord(39 - pos, 8);
+            if (pos < 37)
+                return new XYCoord(8, pos - 22);
+            if (pos < 39)
+                return new XYCoord(44 - pos, 14);
+            if (pos < 44)
+                return new XYCoord(6, 52 - pos);
+            if (pos < 50)
+                return new XYCoord(49 - pos, 8);
+            return new XYCoord(pos - 50, 7);
+        }
+
+        public static XYCoord MapCoordToBoard(XYCoord coord)
+        {
+            return new XYCoord(coord.x * 3, coord.y * 2) + (2, 2);
+        }
     }
     public class XYCoord(int x, int y)
     {
-        public int x;
-        public int y;
+        public int x { get; } = x;
+        public int y { get; } = y;
+
+        public override bool Equals(object? obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+                return false;
+            XYCoord other = (XYCoord)obj;
+            return x == other.x && y == other.y;
+        }
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(x, y);
+        }
+
+        public static XYCoord operator +(XYCoord a, XYCoord b)
+        {
+            return new XYCoord(a.x + b.x, a.y + b.y);
+        }
+        public static XYCoord operator *(XYCoord a, int x)
+        {
+            return new XYCoord(a.x * x, a.y * x);
+        }
+        public static implicit operator (int, int)(XYCoord c) =>
+                                (c.x, c.y);
+        public static implicit operator XYCoord((int X, int Y) c) =>
+                                new(c.X, c.Y);
     }
 }
