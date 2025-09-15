@@ -1,4 +1,6 @@
 ﻿using LudoAPI.DTOs;
+using LudoAPI.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace LudoAPI.Services
 {
@@ -36,7 +38,50 @@ namespace LudoAPI.Services
             if (board.Turn != player.Order) throw new Exception("Not your turn");
             if (board.LastDieValue == null) throw new Exception("Dice has not been rolled");
 
-            peg.Position += (int)board.LastDieValue;
+
+            var players = await _db.Players.Where(p => p.BoardId == board.Id).ToArrayAsync() ?? [];
+            var tasks = players.Select(i => _db.Pegs.Where(p => p.Owner == i.Id).ToArrayAsync());
+            var pegs = (await Task.WhenAll(tasks)).SelectMany(x => x).ToArray() ?? [];
+
+            Dictionary<int, XYCoord> pegCoords = [];
+            XYCoord c;
+            foreach (Peg _peg in pegs)
+            {
+                if (_peg.Id == peg.Id) continue;
+                Player _player = players.First(pl => pl.Id == _peg.Owner);
+                c = BoardView.CalcCoord(_peg.Position);
+                c = BoardView.RotateCoord(c, _player.Quadrant);
+                pegCoords.Add(_peg.Id, c);
+            }
+
+            var newPosition = peg.Position + (int)board.LastDieValue;
+            c = BoardView.CalcCoord(newPosition);
+            c = BoardView.RotateCoord(c, player.Quadrant);
+
+            List<int> enemyStack = [];
+            foreach (var kvp in pegCoords)
+            {
+                if (kvp.Value == c)
+                {
+                    var targetted = pegs.First(p => p.Id == kvp.Key);
+                    if (targetted.Owner == peg.Owner)
+                        // Stack this peg
+                        break;
+                    else enemyStack.Add(kvp.Key);
+
+                }
+            }
+
+            if (enemyStack.Count == 1)
+            {
+                // Delete enemy peg
+                _db.Pegs.Where(p => p.Id == enemyStack.First()).ExecuteDelete();
+                _db.SaveChanges();
+            }
+
+            if (enemyStack.Count <= 1 || newPosition <= 56)
+                peg.Position = newPosition;
+
             board.State = BoardState.Roll;
             if (board.LastDieValue != 6)
                 board.TurnNext();

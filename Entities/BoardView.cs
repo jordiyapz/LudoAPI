@@ -130,7 +130,7 @@ namespace LudoAPI.Entities
             return new XYCoord(coord.x * 3, coord.y * 2) + (1, 1);
         }
     }
-    public class XYCoord(int x, int y)
+    public class XYCoord(int x, int y) : IEquatable<XYCoord>
     {
         public int x { get; } = x;
         public int y { get; } = y;
@@ -142,9 +142,29 @@ namespace LudoAPI.Entities
             XYCoord other = (XYCoord)obj;
             return x == other.x && y == other.y;
         }
+        public static bool operator ==(XYCoord a, XYCoord b)
+        {
+            return a.x == b.x && a.y == b.y;
+        }
+        public static bool operator !=(XYCoord a, XYCoord b)
+        {
+            return a.x != b.x || a.y != b.y;
+        }
+
         public override int GetHashCode()
         {
             return HashCode.Combine(x, y);
+        }
+
+        public bool Equals(XYCoord? obj)
+        {
+            if (obj is null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            XYCoord other = (XYCoord)obj;
+            return x == other.x && y == other.y;
         }
 
         public static XYCoord operator +(XYCoord a, XYCoord b)

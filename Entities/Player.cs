@@ -21,6 +21,8 @@ public class Player
 
     public char CharSymbol => (char)Symbol;
 
+    public int Quadrant => (int)CharSymbol - 97;
+
     public static Player Create(Guid boardId, PegSymbol symbol, int order=1)
     {
         return new Player(boardId, symbol, order);
