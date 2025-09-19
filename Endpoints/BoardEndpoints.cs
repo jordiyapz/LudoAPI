@@ -11,7 +11,9 @@ public static class BoardEndpoints
         {
             var boards = await service.GetAllBoardsAsync();
             return TypedResults.Ok(boards);
-        });
+        })
+            .WithName("ListBoards")
+            .WithDescription("List all existing boards");
 
         boardApi.MapPost("/", async (IBoardService service, CreateBoardBody body) =>
         {

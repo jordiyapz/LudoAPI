@@ -1,13 +1,3 @@
 {
-  "dependencies": {
-    "secrets1": {
-      "type": "secrets.user"
-    },
-    "sqlite1": {
-      "secretStore": "LocalSecretsFile",
-      "resourceId": null,
-      "type": "sqlite.local",
-      "connectionId": "ConnectionStrings:DefaultConnection"
-    }
-  }
+  "dependencies": {}
 }
