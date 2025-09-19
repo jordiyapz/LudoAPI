@@ -10,6 +10,7 @@ public class Peg
     public int Owner { get; private set; }
     public int Position { get; set; }
     public int Order { get; set; }
+    public bool Movable { get; set; } = true;
     private Peg()
     {
         Position = 0;
@@ -17,6 +18,6 @@ public class Peg
     }
     public static Peg Create(int ownerId, int order = 0, int position = 0)
     {
-        return new() { Owner = ownerId, Order = order, Position = position };
+        return new() { Owner = ownerId, Order = order, Position = position, Movable = position < 56 };
     }
 }

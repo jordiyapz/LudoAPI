@@ -8,6 +8,12 @@ public static class PegEndpoints
     public static void MapPegEndpoints(this IEndpointRouteBuilder routes)
     {
         var pegApi = routes.MapGroup("/pegs").WithTags("Pegs");
+
+        pegApi.MapGet("/", async (IPegService service, [FromHeader(Name = "X-Player-Key")] Guid playerKey) =>
+        {
+            return await service.ListPegAsync(playerKey);
+        });
+
         pegApi.MapPost("/", async ([FromServices] IPegService service, [FromHeader(Name = "X-Player-Key")] Guid playerKey) =>
         {
             try

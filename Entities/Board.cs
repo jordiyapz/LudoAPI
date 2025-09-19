@@ -53,5 +53,6 @@ public enum BoardState
 {
     Waiting,
     Roll,
-    Move
+    Move,
+    GameOver
 }
