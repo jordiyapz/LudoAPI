@@ -1,6 +1,8 @@
+using LudoAPI.DTOs;
+using LudoAPI.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-
 public static class BoardEndpoints
 {
     public static void MapBoardEndpoints(this IEndpointRouteBuilder routes)
@@ -11,47 +13,88 @@ public static class BoardEndpoints
         {
             var boards = await service.GetAllBoardsAsync();
             return TypedResults.Ok(boards);
-        })
-            .WithName("ListBoards")
+        }).WithName("ListBoards")
+            .WithSummary("List boards")
             .WithDescription("List all existing boards");
 
-        boardApi.MapPost("/", async (IBoardService service, CreateBoardBody body) =>
+        boardApi.MapPost("/", async Task<Results<Created<CreateBoardDTO>, BadRequest<string>>> (IBoardService service, CreateBoardBody body) =>
         {
-            var board = await service.CreateBoardAsync(body);
-            return TypedResults.Created($"/boards/{board.Id}", board);
-        });
+            try
+            {
+                var board = await service.CreateBoardAsync(body);
+                return TypedResults.Created($"/boards/{board.Id}", board);
+            }
+            catch (Exception e)
+            {
+                return TypedResults.BadRequest(e.Message);
+            }
+        }).WithName("CreateBoard")
+            .WithSummary("Create boards")
+            .WithDescription("Create new board");
 
-        boardApi.MapGet("/{id}", async (IBoardService service, Guid id) =>
+        boardApi.MapGet("/{id}", async Task<Results<Ok<BoardDTO>, NotFound<string>>> (IBoardService service, Guid id) =>
         {
             var board = await service.GetBoardAsync(id);
-            if (board is null) return (IResult)TypedResults.NotFound("Board not found.");
+            if (board == null) return TypedResults.NotFound("Board not found.");
             return TypedResults.Ok(board);
-        });
+        }).WithName("GetBoard")
+            .WithSummary("Get board")
+            .WithDescription("Get board by id");
 
-        boardApi.MapGet("/{id}/view", async (IBoardService service, Guid id) =>
+        boardApi.MapDelete("/{id}", async Task<Results<Ok<BoardDTO>, BadRequest<string>>> (IBoardService service, Guid id, [FromBody] DeleteBoardBody body) =>
+        {
+            try
+            {
+                var result = await service.DeleteBoardAsync(id, body.Secret);
+                return TypedResults.Ok(result);
+            }
+            catch (Exception e)
+            {
+                return TypedResults.BadRequest(e.Message);
+            }
+        }).WithName("DeleteBoard")
+            .WithSummary("Delete board")
+            .WithDescription("Delete a board by id. Use 'secret' at the body.");
+
+        boardApi.MapGet("/{id}/view",
+            async Task<Results<ContentHttpResult, NotFound<string>>>
+            (IBoardService service, Guid id) =>
         {
             var result = await service.GetBoardViewAsync(id);
-            if (result is null) return (IResult)TypedResults.NotFound("Board not found.");
+            if (result is null) return TypedResults.NotFound("Board not found.");
             return TypedResults.Text(result, "text/plain");
-        });
+        }).WithName("GetBoardView")
+            .WithSummary("View board")
+            .WithDescription("Get board's view")
+            .Produces<string>(StatusCodes.Status200OK, "text/plain");
 
-        boardApi.MapPut("/{id}/dice", async (IBoardService service, Guid id, [FromHeader(Name = "X-Player-Key")] Guid playerKey) =>
+        boardApi.MapGet("/{id}/pegs",
+            async Task<Results<Ok<DetailedPegDTO[]>, NotFound>>
+            (IBoardService service, Guid id) =>
+            {
+                var pegs = await service.ListPegsOnBoardAsync(id);
+                return pegs is null ? TypedResults.NotFound() : TypedResults.Ok(pegs);
+            })
+            .WithName("ListPegsOnBoard")
+            .WithSummary("List pegs on board")
+            .WithDescription("List pegs on board where the player exist.");
+
+        boardApi.MapPut("/{id}/dice", async Task<Results<Ok<BoardDTO>, NotFound<string>, BadRequest<string>>> (IBoardService service, Guid id, [FromHeader(Name = "X-Player-Key")] Guid playerKey) =>
         {
             try
             {
                 BoardDTO? board = await service.RollDice(id, playerKey);
-                if (board is null) return (IResult)TypedResults.NotFound("Board not found.");
-                return TypedResults.Ok(board);
+                return board is null ? TypedResults.NotFound("Board not found.") : TypedResults.Ok(board);
             }
             catch (Exception e)
             {
-                return (IResult)TypedResults.BadRequest(e.Message);
+                return TypedResults.BadRequest(e.Message);
             }
-        });
+        }).WithName("RollDice")
+            .WithSummary("Roll dice")
+            .WithDescription("Roll the dice of a board");
 
-        boardApi.MapPut("/{id}/turn", () => {
-            throw new NotImplementedException();
-        });
+
 
 
     }

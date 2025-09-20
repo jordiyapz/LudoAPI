@@ -4,12 +4,12 @@ using LudoAPI.Services;
 using LudoAPI.Endpoints;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
-
 var builder = WebApplication.CreateBuilder(args);
 
+var AllowedOrigins = builder.Configuration["AllowedOrigins"];
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: MyAllowSpecificOrigins, policy => { policy.WithOrigins("http://localhost:5173"); });
+    options.AddPolicy(name: MyAllowSpecificOrigins, policy => { policy.WithOrigins(AllowedOrigins ?? "*"); });
 });
 
 var conn = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -27,6 +27,12 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<LudoDbContext>();
+    context.Database.Migrate(); // This creates the database if it doesn't exist
+}
+
 // Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())
 app.MapOpenApi();
@@ -41,6 +47,7 @@ app.MapScalarApiReference("/docs",
             apiKey.Value = "sk-demo-key-12345";
         });
         options.WithPersistentAuthentication();
+        options.Favicon = "/favicon.svg";
     });
 
 app.UseHttpsRedirection();
@@ -48,4 +55,6 @@ app.UseCors(MyAllowSpecificOrigins);
 app.MapBoardEndpoints();
 app.MapPlayerEndpoints();
 app.MapPegEndpoints();
+app.MapGet("/", () => Results.Redirect("/docs")).ExcludeFromDescription();
+app.MapStaticAssets();
 app.Run();

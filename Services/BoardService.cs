@@ -33,6 +33,16 @@ public class BoardService(LudoDbContext dbContext) : IBoardService
           board.Id, board.NumOfPlayers, board.GetStateString(), board.Turn, board.LastDieValue, board.Created);
     }
 
+    public async Task<BoardDTO> DeleteBoardAsync(Guid id, Guid secret)
+    {
+        var board = _db.Boards.Find(id) ?? throw new ArgumentException("Board does not exist");
+        if (board.Secret != secret) throw new ArgumentException("Secret doesn't match");
+        var dto = new BoardDTO(board.Id, board.NumOfPlayers, board.GetStateString(), board.Turn, board.LastDieValue, board.Created);
+        _db.Boards.Remove(board);
+        await _db.SaveChangesAsync();
+        return dto;
+    }
+
     public async Task<string?> GetBoardViewAsync(Guid id)
     {
         var board = await _db.Boards.FindAsync(id);
@@ -41,6 +51,19 @@ public class BoardService(LudoDbContext dbContext) : IBoardService
         var tasks = players.Select(i => _db.Pegs.Where(p => p.Owner == i.Id).ToArrayAsync());
         var pegs = (await Task.WhenAll(tasks)).SelectMany(x => x).ToArray() ?? [];
         return new BoardView(board, players, pegs).render();
+    }
+
+    public async Task<DetailedPegDTO[]?> ListPegsOnBoardAsync(Guid id)
+    {
+        var board = _db.Boards.AsNoTracking().FirstOrDefault(b => b.Id == id);
+        if (board is null) return null;
+        var playerList = _db.Players.AsNoTracking().Where(p => p.BoardId == id).ToArray();
+        var tasks = playerList.Select(i => _db.Pegs.AsNoTracking().Where(p => p.Owner == i.Id).ToArrayAsync());
+        var pegs = (await Task.WhenAll(tasks)).SelectMany(x => x).ToArray() ?? [];
+        Dictionary<int, char> symbolDict = [];
+        foreach (Player p in playerList)
+            symbolDict.Add(p.Id, p.CharSymbol);
+        return [.. pegs.Select(x => new DetailedPegDTO(x.Id, x.Owner, x.Position, x.Order, symbolDict.GetValueOrDefault(x.Owner, 'x')))];
     }
 
     public async Task<BoardDTO?> RollDice(Guid boardId, Guid playerKey, int? seed = null)

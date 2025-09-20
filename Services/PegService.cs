@@ -8,22 +8,6 @@ namespace LudoAPI.Services
     {
         private readonly LudoDbContext _db = dbContext;
 
-        public async Task<DetailedPegDTO[]> ListPegAsync(Guid playerKey)
-        {
-            var player = _db.Players.FirstOrDefault(p => p.Key == playerKey);
-            if (player == null) throw new Exception("Invalid player key");
-            var playerList = _db.Players.Where(p => p.BoardId == player.BoardId).ToArray();
-            var tasks = playerList.Select(i => _db.Pegs.Where(p => p.Owner == i.Id).ToArrayAsync());
-            var pegs = (await Task.WhenAll(tasks)).SelectMany(x => x).ToArray() ?? [];
-            Dictionary<int, char> symbolDict = [];
-            foreach (Player p in playerList)
-            {
-                symbolDict.Add(p.Id, p.CharSymbol);
-            }
-
-            return [.. pegs.Select(x => new DetailedPegDTO(x.Id, x.Owner, x.Position, x.Order, symbolDict.GetValueOrDefault(x.Owner, 'x')))];
-        }
-
         public async Task<PegDTO> CreatePegAsync(Guid playerKey)
         {
             var player = _db.Players.FirstOrDefault(p => p.Key == playerKey) ?? throw new Exception("Wrong player key");

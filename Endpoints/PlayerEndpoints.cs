@@ -1,9 +1,13 @@
+using Microsoft.AspNetCore.Http.HttpResults;
+
 public static class PlayerEndpoints
 {
     public static void MapPlayerEndpoints(this IEndpointRouteBuilder routes)
     {
         var playerApi = routes.MapGroup("/players").WithTags("Players");
-        playerApi.MapPost("/", async (IPlayerService service, CreatePlayerBody payload) =>
+        playerApi.MapPost("/",
+            async Task<Results<Created<CreatePlayerDTO>, BadRequest<string>>>
+            (IPlayerService service, CreatePlayerBody payload) =>
         {
             try
             {
@@ -12,10 +16,10 @@ public static class PlayerEndpoints
             }
             catch (ArgumentException ex)
             {
-                return (IResult)TypedResults.BadRequest(ex.Message);
+                return TypedResults.BadRequest(ex.Message);
             }
-        })
-            .WithName("CreatePlayer")
+        }).WithName("CreatePlayer")
+            .WithSummary("Create player")
             .WithDescription("Create player on specific board.");
     }
 }
