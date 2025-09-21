@@ -61,8 +61,16 @@ public class PlayerService(LudoDbContext dbContext) : IPlayerService
 
     public async Task<PlayerDTO> ValidatePlayerKey(Guid playerKey, Guid boardId)
     {
-        var player = await _db.Players.FirstOrDefaultAsync(p => p.Key == playerKey && p.BoardId == boardId);
-        if (player == null) throw new ArgumentException("Invalid key");
+        var player = await _db.Players.FirstOrDefaultAsync(p => p.Key == playerKey && p.BoardId == boardId)
+            ?? throw new ArgumentException("Invalid key");
         return new PlayerDTO(player.Id, player.BoardId, player.Symbol, player.Order);
+    }
+
+    public async Task<PlayerDTO[]> DeleteBoardPlayersAsync(Guid boardId)
+    {
+        var query = _db.Players.Where(p => p.BoardId == boardId);
+        var players = query.Select(p => new PlayerDTO(p.Id, boardId, p.Symbol, p.Order)).ToArray();
+        await query.ExecuteDeleteAsync();
+        return players;
     }
 }

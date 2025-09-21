@@ -123,5 +123,13 @@ namespace LudoAPI.Services
 
             return new PegDTO(peg.Id, peg.Owner, peg.Position, peg.Order);
         }
+        public async Task<PegDTO[]> DeleteBoardPegsAsync(Guid boardId)
+        {
+            var pegs = await GetBoardPegsFlat(boardId);
+            var results = pegs.Select(p => new PegDTO(p.Id, p.Owner, p.Position, p.Order));
+            var pegIdList = pegs.Select(p => p.Id).ToArray();
+            await _db.Pegs.Where(p => pegIdList.Contains(p.Id)).ExecuteDeleteAsync();
+            return [.. results];
+        }
     }
 }

@@ -41,12 +41,26 @@ public static class BoardEndpoints
             .WithSummary("Get board")
             .WithDescription("Get board by id");
 
-        boardApi.MapDelete("/{id}", async Task<Results<Ok<BoardDTO>, BadRequest<string>>> (IBoardService service, Guid id, [FromBody] DeleteBoardBody body) =>
+        boardApi.MapDelete("/{id}",
+            async Task<Results<Ok<DeleteBoardDTO>, BadRequest<string>>>
+            (
+                IBoardService service,
+                IPegService pegService,
+                IPlayerService playerService,
+                Guid id,
+                [FromBody] DeleteBoardBody body
+            ) =>
         {
             try
             {
-                var result = await service.DeleteBoardAsync(id, body.Secret);
-                return TypedResults.Ok(result);
+                var board = await service.DeleteBoardAsync(id, body.Secret);
+                var pegs = await pegService.DeleteBoardPegsAsync(id);
+                var players = await playerService.DeleteBoardPlayersAsync(id);
+                return TypedResults.Ok(
+                    new DeleteBoardDTO(
+                        board.Id, board.NumOfPlayers, board.State, board.Turn, board.LastDieValue, board.CreatedAt, players, pegs
+                    )
+                );
             }
             catch (Exception e)
             {
